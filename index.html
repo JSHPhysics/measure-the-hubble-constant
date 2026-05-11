@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+<title>Hubble's Law — Deep Field Laboratory</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+:root {
+  --font-scale: 1;
+  --bg: #f5efe2;
+  --bg-alt: #ede5d3;
+  --panel: #fbf6ea;
+  --ink: #1a2840;
+  --ink-soft: #3d4f6b;
+  --muted: #7a6f5a;
+  --line: #d4c9b0;
+  --line-soft: #e3d8bf;
+  --accent: #1e3a5f;
+  --accent-hover: #2a4d7a;
+  --accent-soft: #d6dde9;
+  --warm: #a8633a;
+  --warm-soft: #e8d4c2;
+  --success: #4a6b3a;
+  --danger: #8b3a3a;
+  --sky-bg: #0a0e1e;
+  --shadow: 0 1px 2px rgba(26,40,64,0.04), 0 2px 8px rgba(26,40,64,0.06);
+  --shadow-lg: 0 4px 12px rgba(26,40,64,0.08), 0 12px 32px rgba(26,40,64,0.10);
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html { font-size: calc(16px * var(--font-scale)); }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-feature-settings: 'cv11', 'ss01';
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 20% 10%, rgba(168,99,58,0.04), transparent 50%),
+    radial-gradient(circle at 90% 90%, rgba(30,58,95,0.04), transparent 50%);
+}
+
+/* Typography */
+h1, h2, h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; color: var(--ink); margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: 1.75rem; line-height: 1.1; }
+h2 { font-size: 0.78rem; font-family: 'Inter', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-soft); margin-bottom: 1rem; }
+h3 { font-size: 1.25rem; }
+.mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* Header */
+.header {
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+}
+.header-inner {
+  max-width: 1600px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 0.75rem; flex: 1; min-width: 280px; }
+.brand h1 { font-size: 1.5rem; }
+.brand .subtitle { font-size: 0.8rem; color: var(--muted); font-style: italic; }
+.header-controls { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+/* Buttons */
+.btn {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.9rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 36px;
+}
+.btn:hover { background: var(--bg-alt); border-color: var(--ink-soft); }
+.btn-primary { background: var(--accent); color: #f5efe2; border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-warm { background: var(--warm); color: #fbf6ea; border-color: var(--warm); }
+.btn-warm:hover { background: #8f5230; }
+.btn-ghost { background: transparent; border-color: transparent; padding: 0.4rem 0.6rem; }
+.btn-ghost:hover { background: var(--bg-alt); }
+.btn-icon { padding: 0.4rem; width: 36px; justify-content: center; }
+.btn-sm { font-size: 0.75rem; padding: 0.35rem 0.7rem; min-height: 30px; }
+
+.font-controls { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); overflow: hidden; }
+.font-controls button {
+  background: transparent; border: none; padding: 0.4rem 0.6rem; cursor: pointer; color: var(--ink-soft);
+  font-family: 'Cormorant Garamond', serif; font-weight: 600;
+}
+.font-controls button:hover { background: var(--bg-alt); color: var(--ink); }
+.font-controls .fs-down { font-size: 0.85rem; }
+.font-controls .fs-up { font-size: 1.1rem; }
+.font-controls .fs-reset { font-size: 0.7rem; font-family: 'Inter'; padding: 0.4rem 0.7rem; border-left: 1px solid var(--line); border-right: 1px solid var(--line); }
+
+/* Tabs */
+.tabs { display: inline-flex; background: var(--bg-alt); border: 1px solid var(--line); border-radius: var(--radius); padding: 3px; }
+.tab-btn {
+  background: transparent; border: none; padding: 0.4rem 1rem; font-size: 0.85rem; font-weight: 500;
+  color: var(--muted); cursor: pointer; border-radius: 6px; transition: all 0.15s;
+}
+.tab-btn.active { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); }
+
+/* Layout */
+.container { max-width: 1600px; margin: 0 auto; padding: 1.5rem; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 480px); gap: 1.25rem; }
+@media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow);
+}
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.panel-header h2 { margin-bottom: 0; }
+
+/* Settings rail */
+.settings-row { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.toggle {
+  display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.4rem 0.75rem;
+  background: var(--bg-alt); border: 1px solid var(--line); border-radius: 20px;
+  font-size: 0.78rem; color: var(--ink-soft); cursor: pointer; user-select: none;
+  transition: all 0.15s;
+}
+.toggle:hover { border-color: var(--ink-soft); }
+.toggle input { display: none; }
+.toggle .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--line); transition: all 0.15s; }
+.toggle.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.toggle.on .dot { background: var(--accent); box-shadow: 0 0 0 3px rgba(30,58,95,0.15); }
+
+/* Sky Map */
+#sky-map {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  background: radial-gradient(ellipse at center, #14182a 0%, #06080f 100%);
+  border-radius: var(--radius);
+  border: 1px solid #1a1f3a;
+  overflow: hidden;
+  cursor: crosshair;
+  touch-action: manipulation;
+}
+#sky-map::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 40% 60%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1px 1px at 85% 15%, rgba(255,255,255,0.3), transparent);
+  pointer-events: none;
+}
+.obj {
+  position: absolute;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  transform: translate(-50%, -50%);
+}
+.obj:hover { transform: translate(-50%, -50%) scale(1.6); box-shadow: 0 0 12px rgba(255,255,255,0.6); z-index: 10; }
+.obj.selected { box-shadow: 0 0 0 2px #c9a86a, 0 0 16px rgba(201,168,106,0.5); z-index: 11; }
+
+.tooltip {
+  position: absolute;
+  background: rgba(10,14,30,0.95);
+  color: #f5efe2;
+  border: 1px solid #2a3050;
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 20;
+  white-space: nowrap;
+}
+.tooltip.show { opacity: 1; }
+
+.sky-legend {
+  position: absolute; bottom: 8px; left: 8px;
+  background: rgba(10,14,30,0.7);
+  color: #c0c4d0;
+  font-size: 0.7rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Target display */
+.target-display {
+  background: linear-gradient(to right, var(--accent-soft), transparent);
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius);
+  border-left: 3px solid var(--accent);
+  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+.target-display .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); }
+.target-display .value { font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--ink); font-weight: 500; }
+
+/* Spectrum */
+.spectrum-container { background: #fcfaf4; padding: 1rem; border-radius: var(--radius); border: 1px solid var(--line-soft); }
+.spectrum-box {
+  position: relative; height: 56px; border-radius: 4px; overflow: hidden;
+  border: 1px solid var(--line); margin-bottom: 0.25rem;
+}
+.rainbow {
+  width: 100%; height: 100%;
+  background: linear-gradient(to right,
+    #4b0082 0%, #2828c8 12%, #0080ff 24%, #00ff88 38%,
+    #d4d800 52%, #ff9500 70%, #ff2020 88%, #780000 100%);
+  opacity: 0.55;
+}
+.ref-line { position: absolute; top: 0; width: 2px; height: 100%; background: rgba(255,255,255,0.5); border-left: 1px dashed rgba(255,255,255,0.8); }
+.ref-label { position: absolute; top: -16px; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; white-space: nowrap; }
+.obs-line { position: absolute; top: 0; width: 3px; height: 100%; background: #0a0e1e; box-shadow: 0 0 6px rgba(0,0,0,0.5); }
+.obs-label { position: absolute; bottom: -18px; transform: translateX(-50%); font-size: 0.7rem; color: var(--ink); font-family: 'JetBrains Mono', monospace; font-weight: 600; white-space: nowrap; }
+
+.scale { position: relative; height: 22px; margin-top: 14px; }
+.tick { position: absolute; transform: translateX(-50%); font-size: 0.65rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+.tick::before { content: ''; position: absolute; top: -6px; left: 50%; width: 1px; height: 5px; background: var(--muted); }
+
+.spectrum-help { font-size: 0.75rem; color: var(--muted); margin-top: 0.75rem; line-height: 1.5; }
+
+/* Cosmology controls */
+.cosmo-panel {
+  background: var(--bg-alt);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.cosmo-row { display: grid; grid-template-columns: 90px 1fr 75px; gap: 0.75rem; align-items: center; margin-bottom: 0.6rem; font-size: 0.8rem; }
+.cosmo-row:last-child { margin-bottom: 0; }
+.cosmo-row label { color: var(--ink-soft); font-weight: 500; }
+.cosmo-row .val { font-family: 'JetBrains Mono', monospace; text-align: right; color: var(--accent); font-weight: 600; }
+
+input[type=range] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+  background: var(--line); border-radius: 2px; outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px;
+  background: var(--accent); border-radius: 50%; cursor: pointer; border: 2px solid var(--panel);
+  box-shadow: var(--shadow);
+}
+input[type=range]::-moz-range-thumb {
+  width: 18px; height: 18px; background: var(--accent); border-radius: 50%;
+  cursor: pointer; border: 2px solid var(--panel);
+}
+
+.cosmo-note { font-size: 0.72rem; color: var(--muted); margin-top: 0.5rem; padding-top: 0.6rem; border-top: 1px solid var(--line-soft); }
+.preset-btns { display: flex; gap: 0.35rem; margin-top: 0.6rem; flex-wrap: wrap; }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+th, td { padding: 0.55rem 0.4rem; text-align: center; border-bottom: 1px solid var(--line-soft); }
+th { background: var(--bg-alt); font-weight: 600; color: var(--ink-soft); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+tr:hover td { background: rgba(214,221,233,0.3); }
+td input {
+  background: transparent; border: 1px solid transparent; border-radius: 4px;
+  padding: 0.35rem 0.4rem; width: 100%; text-align: center;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--ink);
+  min-height: 32px;
+}
+td input:hover { border-color: var(--line); }
+td input:focus { outline: none; border-color: var(--accent); background: var(--bg); }
+.vel-cell { font-family: 'JetBrains Mono', monospace; color: var(--accent); font-weight: 500; }
+.row-actions { width: 32px; }
+.btn-remove { background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 0.3rem; border-radius: 4px; }
+.btn-remove:hover { background: var(--warm-soft); color: var(--warm); }
+
+.table-actions { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+
+/* Analysis */
+.h0-readout {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin: 1rem 0;
+}
+.metric { background: var(--bg-alt); padding: 0.75rem; border-radius: var(--radius); text-align: center; }
+.metric.featured { background: var(--accent); color: var(--bg); }
+.metric .metric-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8; }
+.metric .metric-value { font-family: 'JetBrains Mono', monospace; font-size: 1.2rem; font-weight: 600; margin-top: 0.2rem; }
+.metric .metric-unit { font-size: 0.7rem; opacity: 0.75; font-family: 'Inter'; }
+
+.equation-card {
+  background: linear-gradient(135deg, var(--bg-alt) 0%, var(--panel) 100%);
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  margin-bottom: 0.75rem;
+}
+.equation-card .step-num {
+  display: inline-block; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--accent); color: var(--bg); font-size: 0.75rem; font-weight: 600;
+  text-align: center; line-height: 22px; margin-right: 0.5rem;
+}
+.equation-card .eq { font-family: 'JetBrains Mono', monospace; background: var(--bg); padding: 0.5rem 0.75rem; border-radius: 4px; margin: 0.5rem 0; display: block; font-size: 0.85rem; color: var(--warm); border: 1px solid var(--line-soft); }
+.equation-card .hint { font-size: 0.75rem; color: var(--muted); }
+
+#chartCanvas { max-height: 360px; }
+
+/* Modal */
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(26,40,64,0.5);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.modal-backdrop.show { display: flex; opacity: 1; }
+.modal {
+  background: var(--panel);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--line);
+  max-width: 620px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(8px);
+  transition: transform 0.2s;
+}
+.modal-backdrop.show .modal { transform: translateY(0); }
+.modal-header { padding: 1.25rem 1.5rem 0.75rem; display: flex; justify-content: space-between; align-items: start; gap: 1rem; border-bottom: 1px solid var(--line-soft); }
+.modal-header h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; }
+.modal-body { padding: 1.25rem 1.5rem; }
+.modal-body p { margin: 0 0 0.85rem 0; color: var(--ink-soft); line-height: 1.65; font-size: 0.92rem; }
+.modal-body strong { color: var(--ink); }
+.modal-body .eq-display { display: block; background: var(--bg-alt); padding: 0.75rem 1rem; border-radius: var(--radius); font-family: 'JetBrains Mono', monospace; color: var(--accent); margin: 0.75rem 0; text-align: center; font-size: 0.95rem; }
+.modal-body ul { margin: 0.5rem 0 0.85rem; padding-left: 1.25rem; color: var(--ink-soft); }
+.modal-body li { margin-bottom: 0.35rem; }
+.modal-close { background: transparent; border: none; cursor: pointer; padding: 0.35rem; border-radius: 4px; color: var(--muted); font-size: 1.2rem; line-height: 1; }
+.modal-close:hover { background: var(--bg-alt); color: var(--ink); }
+
+.help-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; margin-top: 0.5rem; }
+.help-tile {
+  background: var(--bg-alt); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 0.85rem; cursor: pointer; transition: all 0.15s; text-align: left;
+  font-family: 'Inter', sans-serif;
+}
+.help-tile:hover { background: var(--accent-soft); border-color: var(--accent); }
+.help-tile .ht-title { font-weight: 600; color: var(--ink); font-size: 0.85rem; margin-bottom: 0.2rem; }
+.help-tile .ht-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+
+.callout { background: var(--warm-soft); border-left: 3px solid var(--warm); padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 0.85rem; color: var(--ink-soft); margin: 0.75rem 0; }
+.callout strong { color: var(--warm); }
+
+/* Hide elements */
+.hidden { display: none !important; }
+
+/* Footer */
+.footer { text-align: center; padding: 1.5rem 1rem; font-size: 0.75rem; color: var(--muted); font-style: italic; }
+.footer a { color: var(--accent); text-decoration: none; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-alt); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* Mobile/iPad tweaks */
+@media (max-width: 768px) {
+  .container { padding: 1rem; }
+  .header { padding: 0.75rem 1rem; }
+  .brand h1 { font-size: 1.25rem; }
+  .brand .subtitle { display: none; }
+  h2 { font-size: 0.72rem; }
+  .panel { padding: 1rem; }
+  .h0-readout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <h1>Hubble's Law</h1>
+      <span class="subtitle">Deep Field Laboratory</span>
+    </div>
+    <div class="header-controls">
+      <div class="tabs" role="tablist">
+        <button class="tab-btn active" data-tab="student" onclick="switchTab('student', this)">Student</button>
+        <button class="tab-btn" data-tab="teacher" onclick="switchTab('teacher', this)">Teacher</button>
+      </div>
+      <div class="font-controls" role="group" aria-label="Font size">
+        <button class="fs-down" onclick="adjustFont(-1)" aria-label="Decrease font size">A</button>
+        <button class="fs-reset" onclick="resetFont()">Reset</button>
+        <button class="fs-up" onclick="adjustFont(1)" aria-label="Increase font size">A</button>
+      </div>
+      <button class="btn" onclick="openModal('help-index')">
+        <span>?</span> Help
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="layout">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Telescope — Hubble Deep Field</h2>
+          <button class="btn btn-sm" onclick="openModal('how-sky')">How this works</button>
+        </div>
+        <div id="sky-map">
+          <div class="sky-legend">Click a galaxy to capture its spectrum</div>
+          <div id="tooltip" class="tooltip"></div>
+        </div>
+        <div class="settings-row">
+          <label class="toggle" id="tg-galaxy-labels">
+            <input type="checkbox" onchange="toggleGalaxyLabels(this)">
+            <span class="dot"></span> Show galaxy IDs
+          </label>
+          <label class="toggle" id="tg-cosmo">
+            <input type="checkbox" onchange="toggleCosmology(this)">
+            <span class="dot"></span> Cosmology mode
+          </label>
+          <button class="btn btn-ghost btn-sm" onclick="regenerateGalaxies()" title="Generate a fresh deep field">↻ New field</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Spectrometer</h2>
+          <button class="btn btn-sm" onclick="openModal('doppler')">Doppler shift</button>
+        </div>
+
+        <div class="target-display" id="target-display">
+          <div>
+            <div class="label">Target</div>
+            <div class="value" id="td-name">— no galaxy selected —</div>
+          </div>
+          <div>
+            <div class="label">Distance</div>
+            <div class="value" id="td-dist">—</div>
+          </div>
+          <div>
+            <button class="btn btn-primary btn-sm" id="btn-log" onclick="logCurrentTarget()" disabled>Log to table</button>
+          </div>
+        </div>
+
+        <div class="spectrum-container">
+          <div class="spectrum-box" id="spectrum-box">
+            <div class="rainbow"></div>
+            <div class="ref-line" id="ref-line">
+              <div class="ref-label">Hα 656.3 nm (lab)</div>
+            </div>
+            <div class="obs-line hidden" id="obs-line">
+              <div class="obs-label" id="obs-label"></div>
+            </div>
+          </div>
+          <div class="scale" id="ruler"></div>
+        </div>
+
+        <div class="spectrum-help">
+          The faint vertical line marks the Hα absorption line at rest (656.3 nm).
+          Read off the observed wavelength <strong>λ<sub>obs</sub></strong> for the selected galaxy and record it in your table.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="right-col">
+
+      <div class="panel hidden" id="cosmology-panel">
+        <div class="panel-header">
+          <h2>Cosmological Parameters</h2>
+          <button class="btn btn-sm" onclick="openModal('dark-energy')">About Ω<sub>m</sub> &amp; Ω<sub>Λ</sub></button>
+        </div>
+        <div class="cosmo-panel">
+          <div class="cosmo-row">
+            <label for="om">Ω<sub>m</sub> (matter)</label>
+            <input type="range" id="om" min="0" max="1" step="0.01" value="0.315" oninput="onCosmoChange()">
+            <span class="val" id="om-val">0.315</span>
+          </div>
+          <div class="cosmo-row">
+            <label for="ol">Ω<sub>Λ</sub> (dark energy)</label>
+            <input type="range" id="ol" min="0" max="1.4" step="0.01" value="0.685" oninput="onCosmoChange()">
+            <span class="val" id="ol-val">0.685</span>
+          </div>
+          <div class="cosmo-row">
+            <label>Ω<sub>total</sub></label>
+            <div style="font-size: 0.75rem; color: var(--muted); padding-left: 0.5rem;">
+              <span id="om-pct">31.5%</span> matter + <span id="ol-pct">68.5%</span> dark energy
+            </div>
+            <span class="val" id="om-tot">1.00</span>
+          </div>
+          <div class="preset-btns">
+            <button class="btn btn-sm" onclick="setPreset(0.315, 0.685)">ΛCDM (Planck)</button>
+            <button class="btn btn-sm" onclick="setPreset(1.0, 0.0)">Matter-only</button>
+            <button class="btn btn-sm" onclick="setPreset(0.0, 1.0)">Λ-only</button>
+            <button class="btn btn-sm" onclick="setPreset(0.5, 0.5)">Equal</button>
+          </div>
+          <div class="cosmo-note">
+            The dotted curve on the plot shows the v–d relation predicted by these parameters at the fitted H₀.
+            At low distance it's linear; at high distance it curves — that curvature is the fingerprint of dark energy.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Research Log</h2>
+          <button class="btn btn-sm" onclick="openModal('hubble-law')">Hubble's Law</button>
+        </div>
+        <div class="table-wrap">
+          <table id="data-table">
+            <thead id="table-head"></thead>
+            <tbody id="log-body"></tbody>
+          </table>
+        </div>
+        <div class="table-actions">
+          <button class="btn" onclick="addRow()">+ Add row</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearTable()">Clear all</button>
+          <button class="btn btn-warm" onclick="downloadCSV()" style="margin-left:auto;">↓ Download CSV</button>
+        </div>
+      </div>
+
+      <div class="panel" id="analysis-panel">
+        <!-- populated by JS -->
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Modals -->
+<div class="modal-backdrop" id="modal-backdrop" onclick="closeModalOnBackdrop(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modal-title">Title</h3>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<div class="footer">
+  Hubble Deep Field Laboratory · JSHPhysics · <a href="https://jshphysics.github.io" target="_blank">jshphysics.github.io</a>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS & STATE
+// ============================================================
+const L_REST = 656.3;          // Hα rest wavelength (nm)
+const C = 299792.458;          // speed of light (km/s)
+const TRUE_H0 = 70;            // km/s/Mpc — used to generate galaxies
+const TRUE_OM = 0.315;
+const TRUE_OL = 0.685;
+
+// Spectrum axis range (nm)
+let SPEC_MIN = 600;
+let SPEC_MAX = 900;
+
+const state = {
+  mode: 'student',          // 'student' or 'teacher'
+  cosmologyOn: false,
+  galaxyLabels: false,
+  galaxies: [],
+  selectedId: null,
+  loggedIds: new Set(),
+  Om: 0.315,
+  OL: 0.685,
+};
+
+let chart = null;
+
+// ============================================================
+// COSMOLOGY MATH
+// ============================================================
+// E(z) for flat ΛCDM, ignoring radiation (negligible for low z)
+function Ez(z, Om, OL) {
+  const Ok = 1 - Om - OL;
+  return Math.sqrt(Om * Math.pow(1+z, 3) + Ok * Math.pow(1+z, 2) + OL);
+}
+
+// Comoving distance via trapezoidal integration (Mpc)
+function comovingDistance(z, H0, Om, OL) {
+  if (z <= 0) return 0;
+  const N = 200;
+  const dz = z / N;
+  let s = 0;
+  let prev = 1 / Ez(0, Om, OL);
+  for (let i = 1; i <= N; i++) {
+    const zi = i * dz;
+    const cur = 1 / Ez(zi, Om, OL);
+    s += 0.5 * dz * (prev + cur);
+    prev = cur;
+  }
+  return (C / H0) * s;
+}
+
+// Given comoving distance, solve for z (bisection)
+function redshiftFromDistance(d, H0, Om, OL) {
+  let lo = 0, hi = 2;
+  for (let i = 0; i < 50; i++) {
+    const mid = 0.5 * (lo + hi);
+    if (comovingDistance(mid, H0, Om, OL) > d) hi = mid;
+    else lo = mid;
+  }
+  return 0.5 * (lo + hi);
+}
+
+// ============================================================
+// GALAXY GENERATION
+// ============================================================
+function generateGalaxies() {
+  state.galaxies = [];
+  const sky = document.getElementById('sky-map');
+  // Clear old galaxies (keep tooltip + legend)
+  Array.from(sky.querySelectorAll('.obj')).forEach(n => n.remove());
+  state.selectedId = null;
+  state.loggedIds.clear();
+
+  // Distance range depends on cosmology toggle
+  const maxDist = state.cosmologyOn ? 1500 : 500;
+  SPEC_MIN = 600;
+  SPEC_MAX = state.cosmologyOn ? 900 : 760;
+  buildRuler();
+  positionRefLine();
+
+  for (let i = 0; i < 90; i++) {
+    // Bias toward closer galaxies
+    const u = Math.random();
+    const d = Math.pow(u, 1.6) * (maxDist - 20) + 20;
+
+    // True recession velocity from cosmology
+    const z = redshiftFromDistance(d, TRUE_H0, TRUE_OM, TRUE_OL);
+    const v = C * z;            // students use v = cz
+    const lObs = L_REST * (1 + z);
+
+    // Add small random scatter to observed wavelength (~0.5 nm) for realism
+    const lObsNoisy = lObs + (Math.random() - 0.5) * 0.4;
+
+    const g = {
+      id: 'G-' + (1000 + i),
+      d: parseFloat(d.toFixed(1)),
+      z: z,
+      v: v,
+      lObs: parseFloat(lObsNoisy.toFixed(2)),
+      x: 4 + Math.random() * 92,
+      y: 4 + Math.random() * 92,
+      size: Math.max(2.5, 8 - (d / (maxDist / 6))),
+    };
+    state.galaxies.push(g);
+
+    const div = document.createElement('div');
+    div.className = 'obj';
+    div.style.left = g.x + '%';
+    div.style.top = g.y + '%';
+    div.style.width = g.size + 'px';
+    div.style.height = g.size + 'px';
+    const opacity = Math.max(0.35, 1 - g.d / (maxDist * 1.2));
+    // Subtle redshift tint
+    const r = Math.min(255, 220 + g.z * 80);
+    const b = Math.max(180, 240 - g.z * 250);
+    div.style.background = `rgba(${r|0}, 235, ${b|0}, ${opacity})`;
+    div.dataset.id = g.id;
+    div.addEventListener('click', () => selectGalaxy(g.id));
+    div.addEventListener('mouseenter', (e) => showTooltip(g, e));
+    div.addEventListener('mouseleave', hideTooltip);
+    sky.appendChild(div);
+  }
+}
+
+function regenerateGalaxies() {
+  generateGalaxies();
+  applyGalaxyLabels();
+  clearSelection();
+}
+
+// ============================================================
+// SKY MAP INTERACTION
+// ============================================================
+function selectGalaxy(id) {
+  state.selectedId = id;
+  document.querySelectorAll('.obj').forEach(n => {
+    n.classList.toggle('selected', n.dataset.id === id);
+  });
+  const g = state.galaxies.find(x => x.id === id);
+  document.getElementById('td-name').textContent = g.id;
+  document.getElementById('td-dist').textContent = g.d.toFixed(1) + ' Mpc';
+  document.getElementById('btn-log').disabled = false;
+
+  // Place observed line
+  const line = document.getElementById('obs-line');
+  const label = document.getElementById('obs-label');
+  const pct = ((g.lObs - SPEC_MIN) / (SPEC_MAX - SPEC_MIN)) * 100;
+  if (pct >= 0 && pct <= 100) {
+    line.classList.remove('hidden');
+    line.style.left = pct + '%';
+    label.textContent = '? nm';  // Student must read it
+  } else {
+    line.classList.add('hidden');
+  }
+}
+
+function clearSelection() {
+  state.selectedId = null;
+  document.getElementById('td-name').textContent = '— no galaxy selected —';
+  document.getElementById('td-dist').textContent = '—';
+  document.getElementById('btn-log').disabled = true;
+  document.getElementById('obs-line').classList.add('hidden');
+}
+
+function showTooltip(g, e) {
+  const tip = document.getElementById('tooltip');
+  const sky = document.getElementById('sky-map');
+  const rect = sky.getBoundingClientRect();
+  tip.textContent = `${g.id} · ${g.d.toFixed(0)} Mpc`;
+  tip.style.left = (e.clientX - rect.left + 10) + 'px';
+  tip.style.top  = (e.clientY - rect.top + 10) + 'px';
+  tip.classList.add('show');
+}
+function hideTooltip() { document.getElementById('tooltip').classList.remove('show'); }
+
+function toggleGalaxyLabels(el) {
+  state.galaxyLabels = el.checked;
+  el.parentElement.classList.toggle('on', el.checked);
+  applyGalaxyLabels();
+}
+function applyGalaxyLabels() {
+  document.querySelectorAll('.obj').forEach(n => {
+    const id = n.dataset.id;
+    n.title = state.galaxyLabels ? id : '';
+  });
+}
+
+// ============================================================
+// SPECTRUM
+// ============================================================
+function buildRuler() {
+  const ruler = document.getElementById('ruler');
+  ruler.innerHTML = '';
+  const step = (SPEC_MAX - SPEC_MIN) <= 200 ? 20 : 50;
+  for (let λ = SPEC_MIN; λ <= SPEC_MAX; λ += step) {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.left = ((λ - SPEC_MIN) / (SPEC_MAX - SPEC_MIN)) * 100 + '%';
+    tick.textContent = λ;
+    ruler.appendChild(tick);
+  }
+}
+function positionRefLine() {
+  const ref = document.getElementById('ref-line');
+  const pct = ((L_REST - SPEC_MIN) / (SPEC_MAX - SPEC_MIN)) * 100;
+  ref.style.left = pct + '%';
+}
+
+// ============================================================
+// COSMOLOGY TOGGLE
+// ============================================================
+function toggleCosmology(el) {
+  state.cosmologyOn = el.checked;
+  el.parentElement.classList.toggle('on', el.checked);
+  document.getElementById('cosmology-panel').classList.toggle('hidden', !el.checked);
+  regenerateGalaxies();
+  if (state.mode === 'teacher') updatePlot();
+}
+
+function onCosmoChange() {
+  state.Om = parseFloat(document.getElementById('om').value);
+  state.OL = parseFloat(document.getElementById('ol').value);
+  document.getElementById('om-val').textContent = state.Om.toFixed(3);
+  document.getElementById('ol-val').textContent = state.OL.toFixed(3);
+  const tot = state.Om + state.OL;
+  document.getElementById('om-tot').textContent = tot.toFixed(2);
+  document.getElementById('om-pct').textContent = (state.Om * 100).toFixed(1) + '%';
+  document.getElementById('ol-pct').textContent = (state.OL * 100).toFixed(1) + '%';
+  if (state.mode === 'teacher') updatePlot();
+}
+
+function setPreset(om, ol) {
+  document.getElementById('om').value = om;
+  document.getElementById('ol').value = ol;
+  onCosmoChange();
+}
+
+// ============================================================
+// TABLE / DATA ENTRY
+// ============================================================
+function updateTableHead() {
+  const head = document.getElementById('table-head');
+  if (state.mode === 'student') {
+    head.innerHTML = `<tr>
+      <th style="width: 80px;">ID</th>
+      <th>d (Mpc)</th>
+      <th>λ<sub>obs</sub> (nm)</th>
+      <th class="row-actions"></th>
+    </tr>`;
+  } else {
+    head.innerHTML = `<tr>
+      <th style="width: 80px;">ID</th>
+      <th>d (Mpc)</th>
+      <th>λ<sub>obs</sub> (nm)</th>
+      <th>v (km/s)</th>
+      <th class="row-actions"></th>
+    </tr>`;
+  }
+}
+
+function makeRow(prefill = {}) {
+  const tr = document.createElement('tr');
+  const cols = state.mode === 'student'
+    ? `
+      <td><input type="text" class="name-in" placeholder="G-…" value="${prefill.id || ''}"></td>
+      <td><input type="number" class="dist-in" step="0.1" value="${prefill.d ?? ''}"></td>
+      <td><input type="number" class="wave-in" step="0.01" placeholder="—"></td>
+      <td class="row-actions"><button class="btn-remove" onclick="this.closest('tr').remove(); updatePlot();" aria-label="Remove">×</button></td>`
+    : `
+      <td><input type="text" class="name-in" placeholder="G-…" value="${prefill.id || ''}"></td>
+      <td><input type="number" class="dist-in" step="0.1" value="${prefill.d ?? ''}" oninput="updatePlot()"></td>
+      <td><input type="number" class="wave-in" step="0.01" placeholder="—" oninput="updatePlot()"></td>
+      <td class="vel-cell">—</td>
+      <td class="row-actions"><button class="btn-remove" onclick="this.closest('tr').remove(); updatePlot();" aria-label="Remove">×</button></td>`;
+  tr.innerHTML = cols;
+  return tr;
+}
+
+function addRow(prefill = {}) {
+  document.getElementById('log-body').appendChild(makeRow(prefill));
+  if (state.mode === 'teacher') updatePlot();
+}
+
+function clearTable() {
+  if (!confirm('Clear all logged entries?')) return;
+  document.getElementById('log-body').innerHTML = '';
+  state.loggedIds.clear();
+  addRow();
+  if (state.mode === 'teacher') updatePlot();
+}
+
+function logCurrentTarget() {
+  if (!state.selectedId) return;
+  const g = state.galaxies.find(x => x.id === state.selectedId);
+  if (!g) return;
+  if (state.loggedIds.has(g.id)) {
+    alert(`${g.id} is already in your log.`);
+    return;
+  }
+  // Find first empty row, otherwise append
+  const rows = document.querySelectorAll('#log-body tr');
+  let target = null;
+  for (const r of rows) {
+    const inputs = r.querySelectorAll('input');
+    if (!inputs[0].value && !inputs[1].value && !inputs[2].value) { target = r; break; }
+  }
+  if (!target) {
+    target = makeRow();
+    document.getElementById('log-body').appendChild(target);
+  }
+  const inputs = target.querySelectorAll('input');
+  inputs[0].value = g.id;
+  inputs[1].value = g.d.toFixed(1);
+  // Wavelength left blank for student to measure
+  state.loggedIds.add(g.id);
+  if (state.mode === 'teacher') updatePlot();
+  // Focus the wavelength input to invite measurement
+  inputs[2].focus();
+}
+
+// ============================================================
+// ANALYSIS PANEL
+// ============================================================
+function updateAnalysisPanel() {
+  const panel = document.getElementById('analysis-panel');
+  if (state.mode === 'student') {
+    panel.innerHTML = `
+      <div class="panel-header"><h2>Analysis Steps</h2></div>
+      <div class="equation-card">
+        <div><span class="step-num">1</span><strong>Calculate recession velocity</strong></div>
+        <span class="eq">v = c · (λ<sub>obs</sub> − λ<sub>rest</sub>) / λ<sub>rest</sub></span>
+        <div class="hint">c = 3.00 × 10⁵ km/s · λ<sub>rest</sub> = 656.3 nm</div>
+      </div>
+      <div class="equation-card">
+        <div><span class="step-num">2</span><strong>Plot your data</strong></div>
+        <div class="hint">Distance (Mpc) on x-axis · Velocity (km/s) on y-axis. The points should lie on a straight line through the origin.</div>
+      </div>
+      <div class="equation-card">
+        <div><span class="step-num">3</span><strong>Find H₀</strong></div>
+        <span class="eq">v = H₀ · d</span>
+        <div class="hint">The gradient of your line of best fit is the Hubble constant, in km/s/Mpc.</div>
+      </div>
+      <div class="callout">
+        <strong>Tip.</strong> Switch to the Teacher view to see your data plotted live and the fitted H₀ revealed.
+      </div>`;
+  } else {
+    panel.innerHTML = `
+      <div class="panel-header"><h2>Hubble Diagram</h2></div>
+      <div class="h0-readout">
+        <div class="metric featured">
+          <div class="metric-label">Fitted H₀</div>
+          <div class="metric-value" id="h0-fit">—</div>
+          <div class="metric-unit">km/s/Mpc</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Data points</div>
+          <div class="metric-value" id="h0-n">0</div>
+          <div class="metric-unit">galaxies</div>
+        </div>
+      </div>
+      <canvas id="chartCanvas"></canvas>
+      <div class="cosmo-note" style="border:0; padding-top: 0.75rem;">
+        Best-fit line uses linear regression forced through the origin (least-squares on v = H₀ · d).
+        ${state.cosmologyOn ? 'Dotted curve shows the ΛCDM v–d relation at the current Ω<sub>m</sub>, Ω<sub>Λ</sub>.' : ''}
+      </div>`;
+    initChart();
+  }
+}
+
+function initChart() {
+  const ctx = document.getElementById('chartCanvas').getContext('2d');
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Galaxies',
+          data: [],
+          backgroundColor: '#1e3a5f',
+          borderColor: '#1e3a5f',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        },
+        {
+          label: 'Best fit',
+          data: [],
+          type: 'line',
+          borderColor: '#a8633a',
+          borderWidth: 2,
+          pointRadius: 0,
+          fill: false,
+          tension: 0,
+        },
+        {
+          label: 'Cosmological model',
+          data: [],
+          type: 'line',
+          borderColor: '#3d4f6b',
+          borderDash: [4, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          tension: 0.3,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 200 },
+      plugins: {
+        legend: {
+          display: true,
+          position: 'top',
+          align: 'end',
+          labels: { font: { family: 'Inter', size: 11 }, color: '#3d4f6b', boxWidth: 12, padding: 12 }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(10,14,30,0.9)',
+          titleFont: { family: 'JetBrains Mono', size: 11 },
+          bodyFont: { family: 'JetBrains Mono', size: 11 },
+          callbacks: {
+            label: (ctx) => `${ctx.parsed.x.toFixed(1)} Mpc, ${Math.round(ctx.parsed.y)} km/s`
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Distance (Mpc)', font: { family: 'Cormorant Garamond', size: 14, weight: 600 }, color: '#1a2840' },
+          grid: { color: 'rgba(122,111,90,0.15)' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#7a6f5a' },
+          beginAtZero: true,
+        },
+        y: {
+          type: 'linear',
+          title: { display: true, text: 'Velocity (km/s)', font: { family: 'Cormorant Garamond', size: 14, weight: 600 }, color: '#1a2840' },
+          grid: { color: 'rgba(122,111,90,0.15)' },
+          ticks: { font: { family: 'JetBrains Mono', size: 10 }, color: '#7a6f5a' },
+          beginAtZero: true,
+        }
+      }
+    }
+  });
+}
+
+function updatePlot() {
+  if (state.mode !== 'teacher' || !chart) return;
+  const rows = document.querySelectorAll('#log-body tr');
+  const points = [];
+  let sumDV = 0, sumD2 = 0;
+  let maxD = 0;
+
+  rows.forEach(row => {
+    const d = parseFloat(row.querySelector('.dist-in').value);
+    const lObs = parseFloat(row.querySelector('.wave-in').value);
+    const velCell = row.querySelector('.vel-cell');
+    if (Number.isFinite(d) && Number.isFinite(lObs) && d > 0) {
+      const v = ((lObs - L_REST) / L_REST) * C;
+      if (velCell) velCell.textContent = Math.round(v).toLocaleString();
+      points.push({ x: d, y: v });
+      sumDV += d * v;
+      sumD2 += d * d;
+      if (d > maxD) maxD = d;
+    } else if (velCell) {
+      velCell.textContent = '—';
+    }
+  });
+
+  chart.data.datasets[0].data = points;
+
+  const plotMax = Math.max(maxD * 1.1, state.cosmologyOn ? 1600 : 550);
+
+  let h0 = NaN;
+  if (points.length >= 2 && sumD2 > 0) {
+    h0 = sumDV / sumD2;
+    chart.data.datasets[1].data = [{ x: 0, y: 0 }, { x: plotMax, y: h0 * plotMax }];
+    document.getElementById('h0-fit').textContent = h0.toFixed(2);
+  } else {
+    chart.data.datasets[1].data = [];
+    document.getElementById('h0-fit').textContent = '—';
+  }
+  document.getElementById('h0-n').textContent = points.length;
+
+  // Cosmological curve
+  if (state.cosmologyOn && Number.isFinite(h0)) {
+    const curve = [];
+    const N = 40;
+    for (let i = 0; i <= N; i++) {
+      const d = (i / N) * plotMax;
+      if (d === 0) { curve.push({ x: 0, y: 0 }); continue; }
+      const z = redshiftFromDistance(d, h0, state.Om, state.OL);
+      curve.push({ x: d, y: C * z });
+    }
+    chart.data.datasets[2].data = curve;
+    chart.data.datasets[2].hidden = false;
+  } else {
+    chart.data.datasets[2].data = [];
+    chart.data.datasets[2].hidden = true;
+  }
+
+  chart.options.scales.x.max = plotMax;
+  chart.update('none');
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(mode, btn) {
+  state.mode = mode;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  updateTableHead();
+  // Preserve existing rows when switching modes: rebuild rows with same data
+  const existing = [];
+  document.querySelectorAll('#log-body tr').forEach(r => {
+    const ins = r.querySelectorAll('input');
+    if (ins.length >= 3) existing.push({ id: ins[0].value, d: ins[1].value, lObs: ins[2].value });
+  });
+  document.getElementById('log-body').innerHTML = '';
+  if (existing.length === 0) {
+    addRow();
+  } else {
+    existing.forEach(e => {
+      const tr = makeRow({ id: e.id, d: e.d });
+      const ins = tr.querySelectorAll('input');
+      ins[2].value = e.lObs;
+      document.getElementById('log-body').appendChild(tr);
+    });
+  }
+  updateAnalysisPanel();
+  if (state.mode === 'teacher') updatePlot();
+}
+
+// ============================================================
+// FONT SCALING
+// ============================================================
+function adjustFont(dir) {
+  const cur = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--font-scale')) || 1;
+  const next = Math.max(0.8, Math.min(1.5, cur + dir * 0.1));
+  document.documentElement.style.setProperty('--font-scale', next);
+  localStorage.setItem('hubble-font-scale', next);
+  setTimeout(() => { if (chart) chart.resize(); }, 50);
+}
+function resetFont() {
+  document.documentElement.style.setProperty('--font-scale', 1);
+  localStorage.removeItem('hubble-font-scale');
+  setTimeout(() => { if (chart) chart.resize(); }, 50);
+}
+
+// ============================================================
+// CSV
+// ============================================================
+function downloadCSV() {
+  const rows = document.querySelectorAll('#log-body tr');
+  let csv = 'Galaxy ID,Distance (Mpc),Observed wavelength (nm),Velocity (km/s)\n';
+  rows.forEach(row => {
+    const ins = row.querySelectorAll('input');
+    const name = ins[0].value || '';
+    const dist = ins[1].value || '';
+    const wave = ins[2].value || '';
+    let vel = '';
+    if (dist && wave) vel = (((parseFloat(wave) - L_REST) / L_REST) * C).toFixed(2);
+    csv += `${name},${dist},${wave},${vel}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'hubble_data.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+const modalContent = {
+  'help-index': {
+    title: 'Help Topics',
+    body: `
+      <p>Pick a topic, or browse the in-panel "How this works" buttons throughout the lab.</p>
+      <div class="help-grid">
+        <button class="help-tile" onclick="openModal('how-sky')"><div class="ht-title">Using the lab</div><div class="ht-desc">Workflow from telescope to Hubble constant</div></button>
+        <button class="help-tile" onclick="openModal('doppler')"><div class="ht-title">Doppler shift</div><div class="ht-desc">How recession velocity is measured</div></button>
+        <button class="help-tile" onclick="openModal('hubble-law')"><div class="ht-title">Hubble's Law</div><div class="ht-desc">v = H₀ · d, and what H₀ means</div></button>
+        <button class="help-tile" onclick="openModal('dark-energy')"><div class="ht-title">Dark energy &amp; matter</div><div class="ht-desc">What Ω<sub>m</sub> and Ω<sub>Λ</sub> are</div></button>
+        <button class="help-tile" onclick="openModal('tension')"><div class="ht-title">The Hubble tension</div><div class="ht-desc">Why measurements disagree</div></button>
+      </div>`
+  },
+  'how-sky': {
+    title: 'Using the Laboratory',
+    body: `
+      <p>The aim is to measure the <strong>Hubble constant H₀</strong> — the present-day expansion rate of the universe — using only redshift and distance.</p>
+      <p><strong>1. Pick a galaxy.</strong> Click any point in the Telescope view. The instrument reports its distance (assumed already measured, e.g. by standard candles).</p>
+      <p><strong>2. Read its wavelength.</strong> The spectrometer shows a dark absorption line shifted to the right of the lab reference at 656.3 nm. Estimate the observed wavelength λ<sub>obs</sub> from the scale.</p>
+      <p><strong>3. Log the entry.</strong> Press "Log to table" to copy the ID and distance into the Research Log. Type the wavelength you measured.</p>
+      <p><strong>4. Repeat for ~8–12 galaxies</strong> across a wide range of distances.</p>
+      <p><strong>5. Analyse.</strong> In the Student view, calculate velocities by hand using the Doppler equation and plot v vs d on paper. In the Teacher view, the plot and best-fit H₀ appear live.</p>
+      <div class="callout"><strong>Pedagogical note.</strong> Galaxies are generated from the Planck cosmology (H₀ = 70, Ω<sub>m</sub> = 0.315, Ω<sub>Λ</sub> = 0.685) with small wavelength noise, so a careful fit should recover H₀ ≈ 70 km/s/Mpc.</div>`
+  },
+  'doppler': {
+    title: 'Doppler Shift',
+    body: `
+      <p>Light from a receding source is stretched to longer wavelengths — <strong>redshift</strong>. The fractional shift relates to the source's recession velocity:</p>
+      <div class="eq-display">z = (λ<sub>obs</sub> − λ<sub>rest</sub>) / λ<sub>rest</sub></div>
+      <div class="eq-display">v ≈ c · z &nbsp; (for v ≪ c)</div>
+      <p>So a galaxy whose Hα line appears at 670 nm instead of 656.3 nm is redshifted by z ≈ 0.0209, giving v ≈ 6 270 km/s.</p>
+      <p>At very high redshifts (z ≳ 0.1) the non-relativistic formula above starts to under-predict. This lab uses the simple v = cz throughout so students can compute by hand.</p>`
+  },
+  'hubble-law': {
+    title: "Hubble's Law",
+    body: `
+      <p>In 1929, Edwin Hubble plotted the recession velocities of nearby galaxies against their distances and discovered a striking linear trend:</p>
+      <div class="eq-display">v = H₀ · d</div>
+      <p>The slope <strong>H₀</strong> is the <em>Hubble constant</em> — the present rate at which the universe is expanding. It has units of (km/s) per Mpc.</p>
+      <p>If H₀ = 70 km/s/Mpc, every megaparsec of distance corresponds to an extra 70 km/s of recession.</p>
+      <p>Modern measurements place H₀ between roughly 67 and 73 km/s/Mpc, depending on method. The discrepancy is called the <a href="#" onclick="event.preventDefault(); openModal('tension')" style="color: var(--accent);">Hubble tension</a>.</p>
+      <div class="callout"><strong>The age of the universe</strong> is roughly 1/H₀ ≈ 14 billion years (with corrections for matter and dark energy).</div>`
+  },
+  'dark-energy': {
+    title: 'Dark Matter & Dark Energy',
+    body: `
+      <p>The expansion history of the universe is governed by what fills it. In the standard model (flat ΛCDM), two density parameters describe its contents:</p>
+      <ul>
+        <li><strong>Ω<sub>m</sub></strong> — the fraction of critical density in matter (mostly dark matter, with a small slice of ordinary baryonic matter).</li>
+        <li><strong>Ω<sub>Λ</sub></strong> — the fraction in <em>dark energy</em>, a smoothly distributed component with negative pressure that causes the expansion to accelerate.</li>
+      </ul>
+      <p>In a flat universe these add to 1: Ω<sub>m</sub> + Ω<sub>Λ</sub> = 1. Planck satellite data give Ω<sub>m</sub> ≈ 0.315, Ω<sub>Λ</sub> ≈ 0.685.</p>
+      <p>The Hubble parameter at any redshift is:</p>
+      <div class="eq-display">H(z) = H₀ · √( Ω<sub>m</sub>(1+z)³ + Ω<sub>Λ</sub> )</div>
+      <p>At low redshift the v–d relation is essentially linear and the value of Ω<sub>Λ</sub> hardly matters. At larger distances the curvature of the relation depends sensitively on Ω<sub>m</sub> and Ω<sub>Λ</sub>:</p>
+      <ul>
+        <li><strong>More dark energy</strong> → expansion is accelerating now → v–d curve bends <em>upward</em> at high d.</li>
+        <li><strong>Matter-dominated</strong> universe → gravity decelerates expansion → curve bends <em>downward</em>.</li>
+      </ul>
+      <p>Try the presets in the Cosmological Parameters panel and watch the dotted theory curve respond. The data points (generated from the true Planck cosmology) stay fixed — only the model moves.</p>`
+  },
+  'tension': {
+    title: 'The Hubble Tension',
+    body: `
+      <p>Two independent ways of measuring H₀ disagree by more than their error bars:</p>
+      <ul>
+        <li><strong>Local distance ladder</strong> (Cepheids → Type Ia supernovae, e.g. SH0ES collaboration): H₀ ≈ 73 km/s/Mpc.</li>
+        <li><strong>Cosmic microwave background</strong> (Planck satellite, assuming ΛCDM): H₀ ≈ 67 km/s/Mpc.</li>
+      </ul>
+      <p>This ~7% gap, at roughly 5σ significance, is one of the most active controversies in modern cosmology. It may signal:</p>
+      <ul>
+        <li>An unaccounted systematic in one of the measurements;</li>
+        <li>New physics — e.g. early dark energy, decaying dark matter, or a non-flat geometry;</li>
+        <li>Something else entirely.</li>
+      </ul>
+      <p>Tilting Ω<sub>m</sub> and Ω<sub>Λ</sub> in this lab is a small taste of how cosmological parameters and H₀ trade off when fitting the same data.</p>`
+  }
+};
+
+function openModal(key) {
+  const c = modalContent[key];
+  if (!c) return;
+  document.getElementById('modal-title').innerHTML = c.title;
+  document.getElementById('modal-body').innerHTML = c.body;
+  const bd = document.getElementById('modal-backdrop');
+  bd.classList.add('show');
+}
+function closeModal() { document.getElementById('modal-backdrop').classList.remove('show'); }
+function closeModalOnBackdrop(e) { if (e.target.id === 'modal-backdrop') closeModal(); }
+
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', () => {
+  // Restore font scale
+  const savedScale = localStorage.getItem('hubble-font-scale');
+  if (savedScale) document.documentElement.style.setProperty('--font-scale', savedScale);
+
+  buildRuler();
+  positionRefLine();
+  generateGalaxies();
+  updateTableHead();
+  addRow();
+  updateAnalysisPanel();
+});
+</script>
+
+</body>
+</html>
